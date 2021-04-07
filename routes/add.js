@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const router = Router();
-const Course = require('../models/course');
+const Course = require('../models/courseSchm');
 
 router.get('/', (req, res) => {
     res.render('add', {
@@ -14,6 +14,7 @@ router.post('/', async (req, res) => {
         title: req.body.title,
         price: req.body.price,
         img: req.body.img,
+        userId: req.user._id,
     });
 
     try {
