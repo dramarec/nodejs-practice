@@ -14,6 +14,7 @@ if ($card) {
     $card.addEventListener('click', event => {
         if (event.target.classList.contains('js-remove')) {
             const id = event.target.dataset.id;
+            console.log('id ===> ', id);
 
             fetch('/card/remove/' + id, {
                 method: 'delete',
@@ -22,13 +23,13 @@ if ($card) {
                 .then(card => {
                     if (card.courses.length) {
                         const html = card.courses
-                            .map(c => {
+                            .map(item => {
                                 return `
                                 <tr>
-                                    <td>${c.title}</td>
-                                    <td>${c.count}</td>
+                                    <td>${item.title}</td>
+                                    <td>${item.count}</td>
                                     <td>
-                                    <button class="btn btm-small js-remove" data-id="${c.id}">Удалить</button>
+                                    <button class="btn btm-small js-remove" data-id="${item._id}">Удалить</button>
                                     </td>
                                 </tr>
                                 `;

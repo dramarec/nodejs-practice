@@ -4,14 +4,14 @@ const router = Router();
 
 router
     .get('/', async (req, res) => {
-        console.log('req.params :===>', req.params);
-        console.log('router.post ===> req.body ===>', req.body);
+        // console.log('req.params :===>', req.params);
+        // console.log('router.post ===> req.body ===>', req.body);
 
         const courses = await Course.find()
             .populate('userId', 'email name')
             .select('title price img')
             .lean();
-        console.log('.get ===> courses', courses);
+        // console.log('.get ===> courses', courses);
         res.render('courses', {
             title: 'Курсы',
             isCourses: true,
@@ -27,7 +27,7 @@ router
 
     // открывает выбранный из списка на редакцию
     .get('/:id/edit', async (req, res) => {
-        console.log('router.get ===> req.params.', req.params);
+        // console.log('router.get ===> req.params.', req.params);
         if (!req.query.allow) {
             return res.redirect('/');
         }
@@ -41,7 +41,7 @@ router
 
     // редактирует в новом окне , возвращает обновленный курс
     .post('/edit', async (req, res) => {
-        console.log('===> router.post ===> req.body ===>', req.body);
+        // console.log('===> router.post ===> req.body ===>', req.body);
         const { _id } = req.body;
         // console.log('===> router.post ===> id ===>', _id);
         delete req.body.id; //удаляем id, чтоб не попадал в req.body

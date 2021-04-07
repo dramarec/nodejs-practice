@@ -16,30 +16,35 @@ function computePrice(courses) {
 
 router
     .post('/add', async (req, res, next) => {
-        console.log('router.post ===> req.body ===>', req.body);
         const { _id } = req.body;
         const course = await Course.findById(_id).lean();
-        console.log('router.post ===> course ===>', course);
         await req.user.addToCard(course);
         res.redirect('/card');
     })
 
     .delete('/remove/:id', async (req, res) => {
-        const card = await Card.remove(req.params.id);
-        res.status(200).json(card);
-    })
-
-    .get('/', async (req, res) => {
-        // console.log('.get ===> req.user', req.user);
+        await req.user.removeFromCart(req.params.id);
         const user = await req.user
             .populate('cart.items.courseId')
             .execPopulate();
 
-        // console.log('.get ===> user', user);
-        // console.log('.get ===> user.cart.items', user.cart.items);
-        // const courses = user.cart.items.map();
         const courses = mapCartItems(user.cart);
 
+        // console.log('.delete ===> courses', courses);
+        const cart = {
+            courses,
+            price: computePrice(courses),
+        };
+        res.status(200).json(cart);
+    })
+
+    .get('/', async (req, res) => {
+        const user = await req.user
+            .populate('cart.items.courseId')
+            .execPopulate();
+
+        // console.log('.get ===> user.cart.items', user.cart.items);
+        const courses = mapCartItems(user.cart);
         res.render('card', {
             title: 'Корзина',
             isCard: true,
