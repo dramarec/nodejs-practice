@@ -6,7 +6,7 @@
     font-size: 2rem;
 }
 .card {
-    width: 420px;
+    width: 520px;
 }
 
 .course {
@@ -33,4 +33,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.course-form {
+    margin-bottom: 2rem;
 }

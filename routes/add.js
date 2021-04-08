@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const router = Router();
-const Course = require('../models/course');
+const Course = require('../models/courseSchm');
 
 router.get('/', (req, res) => {
     res.render('add', {
@@ -10,11 +10,19 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    const course = new Course(req.body.title, req.body.price, req.body.img);
+    const course = new Course({
+        title: req.body.title,
+        price: req.body.price,
+        img: req.body.img,
+        userId: req.user._id,
+    });
 
-    await course.save();
-
-    res.redirect('/courses');
+    try {
+        await course.save();
+        res.redirect('/courses');
+    } catch (e) {
+        console.log(e);
+    }
 });
 
 module.exports = router;
