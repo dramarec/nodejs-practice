@@ -21,17 +21,24 @@ document.querySelectorAll('.price').forEach(node => {
 document.querySelectorAll('.date').forEach(node => {
     node.textContent = toDate(node.textContent);
 });
-const $price = document.querySelector('#price');
 
 const $card = document.querySelector('#card');
 if ($card) {
     $card.addEventListener('click', event => {
         if (event.target.classList.contains('js-remove')) {
             const id = event.target.dataset.id;
-            console.log('id ===> ', id);
+            // console.log('id ===> ', id);
+            const csrf = event.target.dataset.csrf;
 
             fetch('/card/remove/' + id, {
                 method: 'delete',
+                // метод не сработал
+                // body: JSON.stringify({
+                //     _csrf: csrf,
+                // }),
+                headers: {
+                    'X-XSRF-TOKEN': csrf,
+                },
             })
                 .then(res => res.json())
                 .then(card => {

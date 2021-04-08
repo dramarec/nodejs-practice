@@ -3,6 +3,8 @@ const path = require('path');
 const exhbs = require('express-handlebars');
 const session = require('express-session');
 const MongoStore = require('connect-mongodb-session')(session);
+const csrf = require('csurf');
+const flash = require('connect-flash');
 
 const db = require('./db');
 require('dotenv').config();
@@ -41,6 +43,8 @@ app.use(
         store,
     }),
 );
+app.use(csrf());
+app.use(flash());
 app.use(varMiddleware);
 app.use(userMiddleware);
 
