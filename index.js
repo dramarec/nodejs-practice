@@ -10,6 +10,7 @@ const homeRoutes = require('./routes/home');
 const coursesRoutes = require('./routes/courses');
 const addRoutes = require('./routes/add');
 const cardRoutes = require('./routes/card');
+const ordersdRoutes = require('./routes/orders');
 const User = require('./models/userSchm');
 
 const app = express();
@@ -40,12 +41,13 @@ app.use('/', homeRoutes);
 app.use('/courses', coursesRoutes);
 app.use('/add', addRoutes);
 app.use('/card', cardRoutes);
+app.use('/orders', ordersdRoutes);
 
 app.use((_, res) => {
     res.status(404).json({
         status: 'error',
         code: 404,
-        message: `Use api on routes: ${baseUrl} !!!!!!`,
+        message: `Use api on routes: http://localhost:3000/`,
         data: 'Not found',
     });
 });
