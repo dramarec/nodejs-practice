@@ -1,56 +1,33 @@
-const http = require("http");
-const fs = require('fs')
+const express = require('express');
+const path = require('path');
+const exhbs = require('express-handlebars');
 
-const server = http.createServer((req, res) => {
-  if (req.method === "GET") {
-    res.writeHead(200, {
-      "Content-Type": "text/html charset=utf-8"
-    });
+const homeRoutes = require('./routes/home');
+const addRoutes = require('./routes/add');
+const coursesRoutes = require('./routes/courses');
+const cardRoutes = require('./routes/card');
 
-    if (req.url === '/') {
-      fs.readFile(
-        path.join(__dirname, 'views', 'index.html'),
-        'utf-8',
-        (err, content) => {
-          if (err) {
-            throw err
-          }
- 
-          res.end(content)
-        }
-      )
-    } else if (req.url === '/about') {
-      fs.readFile(
-        path.join(__dirname, 'views', 'about.html'),
-        'utf-8',
-        (err, content) => {
-          if (err) {
-            throw err
-          }
+const app = express();
 
-          res.end(content)
-        }
-      )
-    }
-  } else if (req.method === "POST") {
-    const body = [];
-
-    res.writeHead(200, {
-      "Content-Type": "text/html; charset=utf-8"
-    });
-
-    req.on("data", data => {
-      body.push(Buffer.from(data));
-    });
-
-    req.on("end", () => {
-      const message = body.toString().split("=")[1];
-
-      res.end(`<h1>Ваше сообщение: ${message} </h1>`);
-    });
-  }
+const hbs = exhbs.create({
+    defaultLayout: 'main',
+    extname: 'hbs',
 });
 
-server.listen(3000, () => {
-  console.log("Server is running...");
+app.engine('hbs', hbs.engine);
+app.set('view engine', 'hbs');
+app.set('views', 'views');
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true }));
+
+app.use('/', homeRoutes);
+app.use('/courses', coursesRoutes);
+app.use('/add', addRoutes);
+app.use('/card', cardRoutes);
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
