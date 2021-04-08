@@ -16,13 +16,14 @@
                             {{#each courses}}
                                 <li>
                                     {{course.title}} (x<strong>{{count}}</strong>)
+                                    <p>Цена курса: <span>{{course.price}}</span></p>
                                 </li>
                             {{/each}}
                         </ol>
 
                         <hr>
 
-                        <p>Цена: <span id="price" class="price">{{price}}</span></p>
+                        <p>Цена: <span id="price" class="price">{{orders.price}}</span></p>
                     </div>
                 </div>
             </div>

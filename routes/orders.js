@@ -5,14 +5,16 @@ const router = Router();
 
 router
     .get('/', auth, async (req, res) => {
+        const { _id } = req.user;
         try {
             const orders = await Order.find({
-                'user.userId': req.user._id,
+                'user.userId': _id,
             })
                 .populate('user.userId')
                 .lean();
-            // console.log('.get ===> req.user._id', req.user._id);
-            // console.log('.get ===> orders', orders);
+            console.log('.get ===> req.user._id', req.user._id);
+
+            console.log('.get ===> orders', orders);
 
             res.render('orders', {
                 isOrder: true,
@@ -41,7 +43,7 @@ router
                 count: item.count,
             }));
 
-            console.log('router.post ===> courses', courses);
+            // console.log('router.post ===> courses', courses);
 
             const order = new Order({
                 user: {
