@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const Course = require('../models/courseSchm');
 const router = Router();
+const auth = require('../middleware/auth');
 
 router
     .get('/', async (req, res) => {
@@ -26,7 +27,7 @@ router
     })
 
     // открывает выбранный из списка на редакцию
-    .get('/:id/edit', async (req, res) => {
+    .get('/:id/edit', auth, async (req, res) => {
         // console.log('router.get ===> req.params.', req.params);
         if (!req.query.allow) {
             return res.redirect('/');
@@ -40,7 +41,7 @@ router
     })
 
     // редактирует в новом окне , возвращает обновленный курс
-    .post('/edit', async (req, res) => {
+    .post('/edit', auth, async (req, res) => {
         // console.log('===> router.post ===> req.body ===>', req.body);
         const { _id } = req.body;
         // console.log('===> router.post ===> id ===>', _id);
@@ -53,7 +54,7 @@ router
     })
 
     // удаление
-    .post('/remove', async (req, res) => {
+    .post('/remove', auth, async (req, res) => {
         // console.log('router.post ===> req.body', req.body);
         const { _id } = req.body;
         // console.log('router.post ===> _id', _id);
