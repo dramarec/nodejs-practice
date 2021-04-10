@@ -24,6 +24,7 @@ const app = express();
 const hbs = exhbs.create({
     defaultLayout: 'main',
     extname: 'hbs',
+    helpers: require('./utils/hbs-helpers'),
 });
 const store = new MongoStore({
     collection: 'sessions',
@@ -55,14 +56,14 @@ app.use('/card', cardRoutes);
 app.use('/orders', ordersdRoutes);
 app.use('/auth', authRoutes);
 
-// app.use((_, res) => {
-//     res.status(404).json({
-//         status: 'error',
-//         code: 404,
-//         message: `Use api on routes: http://localhost:3000/`,
-//         data: 'Not found',
-//     });
-// });
+app.use((_, res) => {
+    res.status(404).json({
+        status: 'error',
+        code: 404,
+        message: `Use api on routes: http://localhost:3000/`,
+        data: 'Not found',
+    });
+});
 app.use((err, req, res, next) => {
     console.log(err.stack);
     res.status(500).json({

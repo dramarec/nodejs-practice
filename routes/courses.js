@@ -3,79 +3,100 @@ const Course = require('../models/courseSchm');
 const router = Router();
 const auth = require('../middleware/auth');
 
-router
-    .get('/', async (req, res) => {
-        // console.log('req.params :===>', req.params);
-        // console.log('router.post ===> req.body ===>', req.body);
+// function isOwner(course, req) {
+//     return course.userId.toString() === req.user._id.toString();
+// }
 
-        const courses = await Course.find()
-            .populate('userId', 'email name')
-            .select('title price img')
-            .lean();
-        // console.log('.get ===> courses', courses);
-        res.render('courses', {
-            title: 'Курсы',
-            isCourses: true,
-            courses,
-        });
-        // res.json({
-        //     message: 'All courses',
-        //     status: 'SUCCES',
-        //     code: 200,
-        //     data: { courses },
-        // });
+router
+    .get('/', async (req, res, next) => {
+        try {
+            const courses = await Course.find()
+                .populate('userId', 'email name')
+                .select('title price img')
+                .lean();
+            res.render('courses', {
+                title: 'Курсы',
+                isCourses: true,
+                userId: req.user ? req.user._id.toString() : null,
+                courses,
+            });
+        } catch (error) {
+            next(error);
+            console.log(error);
+        }
     })
 
     // открывает выбранный из списка на редакцию
-    .get('/:id/edit', auth, async (req, res) => {
-        // console.log('router.get ===> req.params.', req.params);
+    .get('/:id/edit', auth, async (req, res, next) => {
         if (!req.query.allow) {
             return res.redirect('/');
         }
-        const course = await Course.findOne({ _id: req.params.id }).lean();
-        // console.log('router.get ===> course', course);
-        res.render('course-edit', {
-            title: `Редактировать ${course.title}`,
-            course,
-        });
+        try {
+            const course = await Course.findOne({ _id: req.params.id }).lean();
+            // console.log(course.userId.toString());
+            if (course.userId.toString() !== req.user._id.toString()) {
+                return res.redirect('/courses');
+            }
+            // if (!isOwner(course, req)) {
+            //     return res.redirect('/courses');
+            // }
+            res.render('course-edit', {
+                title: `Редактировать ${course.title}`,
+                course,
+            });
+        } catch (error) {
+            next(error);
+            console.log(error);
+        }
     })
 
     // редактирует в новом окне , возвращает обновленный курс
-    .post('/edit', auth, async (req, res) => {
-        // console.log('===> router.post ===> req.body ===>', req.body);
-        const { _id } = req.body;
-        // console.log('===> router.post ===> id ===>', _id);
-        delete req.body.id; //удаляем id, чтоб не попадал в req.body
-        const updatedCourse = await Course.findByIdAndUpdate(_id, req.body, {
-            new: true,
-        }).lean();
-        // console.log('router.post ===> updatedCourse', updatedCourse);
-        res.redirect('/courses');
+    .post('/edit', auth, async (req, res, next) => {
+        try {
+            const { _id } = req.body;
+            delete req.body.id;
+            const course = await Course.findById(_id); //удаляем id, чтоб не попадал в req.body
+            if (course.userId.toString() !== req.user._id.toString()) {
+                return res.redirect('/courses');
+            }
+
+            Object.assign(course, req.body);
+            await course.save();
+            // await Course.findByIdAndUpdate(_id, req.body, {
+            //     new: true,
+            // }).lean();
+            res.redirect('/courses');
+        } catch (error) {
+            next(error);
+            console.log(error);
+        }
     })
 
     // удаление
-    .post('/remove', auth, async (req, res) => {
-        // console.log('router.post ===> req.body', req.body);
-        const { _id } = req.body;
-        // console.log('router.post ===> _id', _id);
+    .post('/remove', auth, async (req, res, next) => {
         try {
-            await Course.deleteOne({ _id });
+            const { _id } = req.body;
+            await Course.deleteOne({ _id, userId: req.user._id });
             res.redirect('/courses');
-        } catch (e) {
-            console.log(e);
+        } catch (error) {
+            next(error);
+            console.log(error);
         }
     })
 
     // отрывает курс в новом окне
-    .get('/:id', async (req, res) => {
-        // console.log('router.get -> req.params.id', req.params.id);
-        const course = await Course.findById(req.params.id).lean();
-        // console.log('router.get ===> course', course);
-        res.render('course', {
-            layout: 'empty',
-            title: `Курс ${course.title}`,
-            course,
-        });
+    .get('/:id', async (req, res, next) => {
+        try {
+            const course = await Course.findById(req.params.id).lean();
+            res.render('course', {
+                layout: 'empty',
+                title: `Курс ${course.title}`,
+                course,
+            });
+        } catch (error) {
+            next(error);
+            console.log(error);
+        }
     });
 
 module.exports = router;

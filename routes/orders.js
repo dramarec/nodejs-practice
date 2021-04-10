@@ -9,23 +9,25 @@ router
         try {
             const orders = await Order.find({
                 'user.userId': _id,
-            })
-                .populate('user.userId')
-                .lean();
-            console.log('.get ===> req.user._id', req.user._id);
-
+            }); /* .populate('user.userId'); */
+            // .lean();
             console.log('.get ===> orders', orders);
+
+            console.log(
+                '.get ===> orders',
+                orders.map(i => i.courses),
+            );
 
             res.render('orders', {
                 isOrder: true,
                 title: 'Заказы',
-                price: orders.map(order => ({
+                orders: orders.map(order => ({
                     ...order._doc,
                     price: order.courses.reduce((total, c) => {
                         return (total += c.count * c.course.price);
                     }, 0),
                 })),
-                orders,
+                // orders,
             });
         } catch (error) {
             console.log(error);
