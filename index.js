@@ -20,10 +20,11 @@ const varMiddleware = require('./middleware/variables');
 const userMiddleware = require('./middleware/user');
 
 const app = express();
-//Handlebars
+
 const hbs = exhbs.create({
     defaultLayout: 'main',
     extname: 'hbs',
+    helpers: require('./utils/hbs-helpers'),
 });
 const store = new MongoStore({
     collection: 'sessions',

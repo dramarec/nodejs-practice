@@ -41,20 +41,25 @@ router
 
     //  все курсы в корзине
     .get('/', auth, async (req, res) => {
-        const user = await req.user
-            .populate('cart.items.courseId')
-            .execPopulate();
-        // console.log('.get ===> req.user', req.user);
-        // console.log('.get ===> user.cart.items', user.cart.items);
-        const courses = mapCartItems(user.cart);
-        // console.log('.get ===> courses', courses);
+        try {
+            const user = await req.user
+                .populate('cart.items.courseId')
+                .execPopulate();
+            // console.log('.get ===> req.user', req.user);
+            // console.log('.get ===> user.cart.items', user.cart.items);
+            const courses = mapCartItems(user.cart);
+            // console.log('.get ===> courses', courses);
 
-        res.render('card', {
-            title: 'Корзина',
-            isCard: true,
-            courses: courses,
-            price: computePrice(courses),
-        });
+            res.render('card', {
+                title: 'Корзина',
+                isCard: true,
+                courses,
+                // price: 3000,
+                price: computePrice(courses),
+            });
+        } catch (error) {
+            console.log(error);
+        }
     });
 
 module.exports = router;
