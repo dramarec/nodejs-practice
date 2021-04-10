@@ -1,7 +1,19 @@
 const { Router } = require('express');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
+const sendgrid = require('nodemailer-sendgrid-transport');
 const User = require('../models/userSchm');
 const router = Router();
+const regEmail = require('../emails/registration');
+
+require('dotenv').config();
+const { SENDGRID_API_KEY } = process.env;
+
+const transporter = nodemailer.createTransport(
+    sendgrid({
+        auth: { api_key: SENDGRID_API_KEY },
+    }),
+);
 
 router
     .get('/login', async (req, res) => {
@@ -62,7 +74,6 @@ router
                     'registerError',
                     'Пользователь с таким email уже существует',
                 );
-
                 res.redirect('/auth/login#register');
             } else {
                 const hashPassord = await bcrypt.hash(password, 10);
@@ -74,6 +85,7 @@ router
                 });
                 await user.save();
                 res.redirect('/auth/login#login');
+                await transporter.sendMail(regEmail(email));
             }
         } catch (e) {
             console.log(e);
