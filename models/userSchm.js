@@ -31,6 +31,7 @@ const userSchema = new Schema({
         ],
     },
 });
+
 userSchema.methods.addToCard = function (course) {
     const items = [...this.cart.items];
     const idx = items.findIndex(item => {
