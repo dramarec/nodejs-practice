@@ -1,15 +1,15 @@
-const { body } = require("express-validator/");
-const User = require("../models/courseSchm");
+const { body } = require('express-validator/');
+const User = require('../models/courseSchm');
 
 exports.registerValidators = [
-    body("email")
+    body('email')
         .isEmail()
-        .withMessage("Введите корректный email")
+        .withMessage('Введите корректный email')
         .custom(async (value, { req }) => {
             try {
                 const user = await User.findOne({ email: value });
                 if (user) {
-                    return Promise.reject("Такой email уже занят");
+                    return Promise.reject('Такой email уже занят');
                 }
             } catch (e) {
                 console.log(e);
@@ -17,35 +17,35 @@ exports.registerValidators = [
         })
         .normalizeEmail(),
 
-    body("password", "Пароль должен быть минимум 6 символов")
+    body('password', 'Пароль должен быть минимум 6 символов')
         .isLength({ min: 6, max: 56 })
         .isAlphanumeric()
         .trim(),
 
-    body("confirm")
+    body('confirm')
         .custom((value, { req }) => {
             if (value !== req.body.password) {
-                throw new Error("Пароли должны совпадать");
+                throw new Error('Пароли должны совпадать');
             }
             return true;
         })
         .trim(),
 
-    body("name")
+    body('name')
         .isLength({ min: 3 })
-        .withMessage("Имя должно быть минимум 3 символа")
+        .withMessage('Имя должно быть минимум 3 символа')
         .trim(),
 ];
 
 exports.loginValidation = [
-    body("email")
+    body('email')
         .isEmail()
-        .withMessage("Введите корректный email")
+        .withMessage('Введите корректный email')
         .custom(async (value, { req }) => {
             try {
                 const user = await User.findOne({ email: value });
                 if (user) {
-                    return Promise.reject("Такой email уже занят");
+                    return Promise.reject('Такой email уже занят');
                 }
             } catch (e) {
                 console.log(e);
@@ -53,22 +53,19 @@ exports.loginValidation = [
         })
         .normalizeEmail(),
 
-    body("password", "Пароль должен быть минимум 6 символов")
+    body('password', 'Пароль должен быть минимум 6 символов')
         .isLength({ min: 6, max: 56 })
         .isAlphanumeric()
         .trim(),
 ];
 
 exports.courseValidators = [
-    body("title")
+    body('title')
         .isLength({ min: 3 })
-        .withMessage("Минимальная длинна названия 3 символа")
+        .withMessage('Минимальная длинна названия 3 символа')
         .trim(),
-        
-    body("price")
-        .isNumeric()
-        .withMessage("Введите корректную цену"),
 
-    body("img", "Введите корректный Url картинки")
-        .isURL(),
+    body('price').isNumeric().withMessage('Введите корректную цену'),
+
+    body('img', 'Введите корректный Url картинки').isURL(),
 ];
