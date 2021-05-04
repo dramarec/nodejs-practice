@@ -2,6 +2,8 @@ const { Router } = require('express');
 const Course = require('../models/courseSchm');
 const router = Router();
 const auth = require('../middleware/auth');
+const { courseValidators } = require('../utils/validators');
+const { validationResult } = require('express-validator');
 
 // function isOwner(course, req) {
 //     return course.userId.toString() === req.user._id.toString();
@@ -51,7 +53,14 @@ router
     })
 
     // редактирует в новом окне , возвращает обновленный курс
-    .post('/edit', auth, async (req, res, next) => {
+    .post('/edit', auth, courseValidators, async (req, res, next) => {
+        const errors = validationResult(req);
+        const { _id } = req.body;
+
+        if (!errors.isEmpty()) {
+            return res.status(422).redirect(`/courses/${_id}/edit?allow=true`);
+        }
+
         try {
             const { _id } = req.body;
             delete req.body.id;

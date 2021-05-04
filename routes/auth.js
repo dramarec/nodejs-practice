@@ -1,82 +1,97 @@
-const { Router } = require('express');
-const crypto = require('crypto');
-const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
-const sendgrid = require('nodemailer-sendgrid-transport');
-const User = require('../models/userSchm');
+const { Router } = require("express");
+const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
+const { validationResult } = require("express-validator");
+const nodemailer = require("nodemailer");
+const sendgrid = require("nodemailer-sendgrid-transport");
+const User = require("../models/userSchm");
 const router = Router();
-const regEmail = require('../emails/registration');
-const resetEmail = require('../emails/reset');
+const regEmail = require("../emails/registration");
+const resetEmail = require("../emails/reset");
+const { registerValidators, loginValidation } = require("../utils/validators");
 
-require('dotenv').config();
+require("dotenv").config();
 const { SENDGRID_API_KEY } = process.env;
 
 const transporter = nodemailer.createTransport(
     sendgrid({
         auth: { api_key: SENDGRID_API_KEY },
-    }),
+    })
 );
 
 router
-    .get('/login', async (req, res) => {
-        res.render('auth/login', {
-            title: 'Авторизация',
+    .get("/login", async (req, res) => {
+        res.render("auth/login", {
+            title: "Авторизация",
             isLogin: true,
-            loginError: req.flash('loginError'),
-            registerError: req.flash('registerError'),
+            loginError: req.flash("loginError"),
+            registerError: req.flash("registerError"),
         });
     })
 
-    .get('/logout', async (req, res) => {
+    .get("/logout", async (req, res) => {
         req.session.destroy(() => {
-            res.redirect('/auth/login#login');
+            res.redirect("/auth/login#login");
         });
     })
 
-    .post('/login', async (req, res) => {
+    .post("/login", loginValidation, async (req, res) => {
         try {
             const { email, password } = req.body;
             const candidate = await User.findOne({ email });
 
+            // validation
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                req.flash("registerError", errors.array()[0].msg);
+                return res.status(422).redirect("/auth/login#login");
+            }
+
             if (candidate) {
                 const aresame = await bcrypt.compare(
                     password,
-                    candidate.password,
+                    candidate.password
                 );
 
                 if (aresame) {
                     req.session.user = candidate;
                     req.session.isAuthenticated = true;
-                    req.session.save(err => {
+                    req.session.save((err) => {
                         if (err) {
                             throw err;
                         }
-                        res.redirect('/');
+                        res.redirect("/");
                     });
                 } else {
-                    req.flash('loginError', 'Неверный пароль');
-                    res.redirect('/auth/login#login');
+                    req.flash("loginError", "Неверный пароль");
+                    res.redirect("/auth/login#login");
                 }
             } else {
-                req.flash('loginError', 'Такого пользователя не существует');
-                res.redirect('/auth/login#login');
+                req.flash("loginError", "Такого пользователя не существует");
+                res.redirect("/auth/login#login");
             }
         } catch (error) {
             console.log(error);
         }
     })
 
-    .post('/register', async (req, res) => {
+    .post("/register", registerValidators, async (req, res) => {
         try {
-            const { email, password, repeat, name } = req.body;
+            const { email, password, confirm, name } = req.body;
             const candidate = await User.findOne({ email });
+            // validation
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                req.flash("registerError", errors.array()[0].msg);
+                return res.status(422).redirect("/auth/login#register");
+            }
 
             if (candidate) {
                 req.flash(
-                    'registerError',
-                    'Пользователь с таким email уже существует',
+                    "registerError",
+                    "Пользователь с таким email уже существует"
                 );
-                res.redirect('/auth/login#register');
+                res.redirect("/auth/login#register");
             } else {
                 const hashPassord = await bcrypt.hash(password, 10);
                 const user = new User({
@@ -86,33 +101,33 @@ router
                     cart: { items: [] },
                 });
                 await user.save();
-                res.redirect('/auth/login#login');
                 await transporter.sendMail(regEmail(email));
+                res.redirect("/auth/login#login");
             }
         } catch (e) {
             console.log(e);
         }
     })
 
-    .get('/reset', (req, res) => {
-        res.render('auth/reset', {
-            title: 'Забыли пароль?',
-            error: req.flash('error'),
+    .get("/reset", (req, res) => {
+        res.render("auth/reset", {
+            title: "Забыли пароль?",
+            error: req.flash("error"),
         });
     })
 
-    .post('/reset', (req, res) => {
+    .post("/reset", (req, res) => {
         try {
             crypto.randomBytes(32, async (err, buffer) => {
                 if (err) {
                     req.flash(
-                        'error',
-                        'Что-то пошло не так, повторите попытку позже',
+                        "error",
+                        "Что-то пошло не так, повторите попытку позже"
                     );
-                    return res.redirect('/auth/reset');
+                    return res.redirect("/auth/reset");
                 }
 
-                const token = buffer.toString('hex');
+                const token = buffer.toString("hex");
                 const candidate = await User.findOne({ email: req.body.email });
 
                 if (candidate) {
@@ -120,21 +135,22 @@ router
                     candidate.resetTokenExp = Date.now() + 60 * 60 * 1000;
                     await candidate.save();
                     await transporter.sendMail(
-                        resetEmail(candidate.email, token),
+                        resetEmail(candidate.email, token)
                     );
-                    res.redirect('/auth/login');
+                    res.redirect("/auth/login");
                 } else {
-                    req.flash('error', 'Такого email нет');
-                    res.redirect('/auth/reset');
+                    req.flash("error", "Такого email нет");
+                    res.redirect("/auth/reset");
                 }
             });
         } catch (e) {
             console.log(e);
         }
     })
-    .get('/password/:token', async (req, res) => {
+
+    .get("/password/:token", async (req, res) => {
         if (!req.params.token) {
-            return res.redirect('/auth/login');
+            return res.redirect("/auth/login");
         }
 
         try {
@@ -144,11 +160,11 @@ router
             });
 
             if (!user) {
-                return res.redirect('/auth/login');
+                return res.redirect("/auth/login");
             } else {
-                res.render('auth/password', {
-                    title: 'Восстановить доступ',
-                    error: req.flash('error'),
+                res.render("auth/password", {
+                    title: "Восстановить доступ",
+                    error: req.flash("error"),
                     userId: user._id.toString(),
                     token: req.params.token,
                 });
@@ -157,7 +173,8 @@ router
             console.log(e);
         }
     })
-    .post('/password', async (req, res) => {
+
+    .post("/password", async (req, res) => {
         try {
             const user = await User.findOne({
                 _id: req.body.userId,
@@ -170,10 +187,10 @@ router
                 user.resetToken = undefined;
                 user.resetTokenExp = undefined;
                 await user.save();
-                res.redirect('/auth/login');
+                res.redirect("/auth/login");
             } else {
-                req.flash('loginError', 'Время жизни токена истекло');
-                res.redirect('/auth/login');
+                req.flash("loginError", "Время жизни токена истекло");
+                res.redirect("/auth/login");
             }
         } catch (e) {
             console.log(e);
